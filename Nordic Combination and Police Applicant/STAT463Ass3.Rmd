@@ -1,0 +1,115 @@
+---
+output:
+  word_document: default
+  html_document: default
+---
+A1.
+```{r}
+nordic = read.table('Nordic.txt', header = TRUE)
+nordic.pc = prcomp(nordic[, c(4,5)], scale = TRUE)
+nordic.pc
+```
+
+A2.
+In the competition, it is better to have higher score of SkiJump and shorter time of CrossCountry. We can see that PC1 loading value is negatively correlated with SkiJump while positively correlated with CrossCountry. That means PC1 negatively correlates to the overall performance. Hence, PC1 contains the maximum variance. So it suggests that PC1 is a good way of combining the scores.
+
+A3.
+```{r}
+scores = nordic.pc$x
+nordic[rank(scores[,1])==3,]
+```
+We can see:
+Johannes RYDZEK would have won the bronze medal based on the first principal component.
+
+A4.
+```{r}
+biplot(nordic.pc)
+```
+As SkiJump and CrossCountry are equally and positively correlated with PC2 while SkiJump and CrossCountry better has higher and shorter values respectively, PC2 could represent the athletes who are good at one activity but bad at the other.
+
+A5.
+```{r}
+summary(nordic.pc)
+```
+
+The first principal component only summarize 50% of the variance. So one principal component can not summarize the whole data.
+
+A6. 
+```{r}
+cor(nordic[, c(4,5)])
+```
+SkiJump and CrossCountry are not really correlated. So it is not reasonable to drop the Nordic combined.
+
+A7.
+```{r}
+nordic.pcv = prcomp(nordic[, c(4,5)])
+scores2 = nordic.pcv$x
+nordic[rank(scores2[,1])==1,]
+```
+As the value of CrossCountry (more than 1000) is significantly higher than that of SkiJump(a little more than 100), it is better to standardize the data. So running the PCA on the correlation matrix would be better than running it on the covariance matrix. Otherwise, the measurement in CrossCountry will count more in the PCA result.
+We can see, although Alessandro PITTIN had a relatively lower score in SkiJump, he got the shortest time in CrossCountry. As a result, Alessandro PITTIN would be the gold medallist based on first PCA component on the variance matrix.
+
+B1.
+```{r}
+police = read.csv("police.csv", header=TRUE)
+police.scale <- scale(police, center=TRUE, scale=TRUE)
+library(corrplot)
+corrplot(cor(police))
+```
+```{r}
+round(sapply(1:6, function(i) factanal(police.scale, factors=i)$PVAL), 3)
+```
+Using hypotheses testing with p<=0.05, 5 factors can be found.
+
+B2.
+```{r}
+fa <- factanal(police.scale, factors=5)
+apply(fa$loadings[,c(1,2)] > 0.5, 2, function(x) names(police)[x])
+```
+"WEIGHT" "CHEST"  "THIGH"  "FAT" are grouped by the first factor.
+"HEIGHT" "WEIGHT" "SHLDR"  "PELVIC" "BREATH" are grouped by the second factor.
+
+B3.
+```{r}
+cor(police$DIAST, police$PULSE)
+```
+```{r}
+fa$loadings["DIAST",]
+```
+
+```{r}
+fa$uniquenesses
+```
+
+Although DIAST only contributes little to each factor, it has a low correlation(0.2340876) with PULSE which means DIAST can not be replaced by PULSE. Looking at the uniqueness of DIAST(0.87047648), it suggests DIAST is a very unique measurement. Unfortunately, DIAST ie included in any factor when the loading threshold is set 0.5.That is probably one of the drawbacks of factor analysis.
+
+B4.
+```{r}
+apply(fa$loadings[,c(1,2,3,4,5)] > 0.5, 2, function(x) names(police)[x])
+```
+
+As athletes always have low RECVR and PULSE measurements while other variables are not guaranteed on athletes, for example, an athlete could be high or short, we can 
+see Factor 3 is a perfect one to use for separating athletic applicants from non-athletic applicants.
+
+C1.
+```{r}
+A= matrix(c(10,3,4,10,0,-5), ncol = 2)
+crossprod(A)
+```
+C2.
+```{r}
+eigen(crossprod(A))
+```
+
+C3.
+```{r}
+L = matrix(c(sqrt(205),0,0,sqrt(45)), nrow = 2)
+L
+```
+```{r}
+V = eigen(crossprod(A))$vectors
+U = A %*% V %*% solve(L)
+U
+```
+
+C4. The 3 observations have the maximum variance in the direction of the eigen vectors. The eigen values explain how much of the variance in the whole sample data is explained by the relative principal component. In this case, the first principal component is at the direction of [0.707, 0.707], with a proportion of 14.3/(14.3 + 6.7) of the whole sample variance. The second principal component is at the direction of [-0.707, 0.707] with a proportion of 6.7/(14.3 + 6.7) of the whole sample variance.

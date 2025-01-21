@@ -1,0 +1,85 @@
+---
+output:
+  html_document: default
+  pdf_document: default
+  word_document: default
+---
+1.
+```{r}
+library(MASS)
+train = read.table("pima_train.txt", header = TRUE)
+test = read.table("pima_test.txt", header = TRUE)
+lda.fit = lda(type ~ npreg + glu + bp + skin + bmi + ped + age, data = train)
+lda.pred = predict(lda.fit, test)
+mean(lda.pred$class != test$type)
+```
+
+2.
+```{r}
+table(lda.pred$class, test$type)
+```
+
+```{r}
+29 / (29 + 39)     #patients with diabetes misclassified as healthy
+18 / (114 + 18)    #healthy patients misclassified as having diabetes
+```
+Patients with diabetes misclassified as healthy are more common than healthy patients are misclassified as having diabetes in the test data.
+
+3.
+```{r}
+qda.fit = qda(type ~ npreg + glu + bp + skin + bmi + ped + age, data = train)
+qda.pred = predict(qda.fit, test)
+mean(qda.pred$class != test$type)
+```
+
+4.
+```{r}
+table(qda.pred$class, test$type)
+```
+```{r}
+25 / (25 + 43)     #patients with diabetes misclassified as healthy
+25 / (107 + 25)    #healthy patients misclassified as having diabetes
+```
+
+Although LDA model has lower misclassification error on the provided test set, it classifies more patients with diabetes as healthy(lda:0.43, qda:0.37) which is very dangerous to the patients and the health organisation would not like to see.
+
+5.
+```{r}
+glm.fit = glm(type ~ npreg + glu + bp + skin + bmi + ped + age, data = train, family = binomial)
+glm.probs = predict(glm.fit, test, type = "response")
+dim(test)
+```
+```{r}
+dim(train)
+```
+```{r}
+mean(train$type == 1)    # find the prior probability
+```
+
+```{r}
+glm.pred = rep(0, 200)
+glm.pred[glm.probs > 0.3283133] = 1
+mean(glm.pred != test$type)
+```
+Fit the logistic regression model on train model, the test error is 0.24.
+
+6.
+find the coefficients:
+```{r}
+summary(glm.fit)
+```
+
+use the predict function first
+```{r}
+predict(glm.fit, newdata = data.frame(npreg=5, glu=111, bp=81, skin=33, bmi=25.1, ped=0.36, age=48), type="response")
+```
+
+Calculate the diabetes status:
+find the odd first
+```{r}
+glm.fit$coefficients %*% matrix(c(1, 5, 111, 81, 33, 25.1, 0.36, 48), nrow=8)
+```
+```{r}
+exp(-1.669107)/(1+exp(-1.669107))
+```
+So the predicted diabetes status by logistic regression is 0.1585433.
